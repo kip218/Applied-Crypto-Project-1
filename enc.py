@@ -1,6 +1,12 @@
 import random
 import string
 
+def shift(char, k):
+	old_i = text_space.index(char)
+	new_i = (old_i + k) % len(text_space)
+	new_char = text_space[new_i]
+	return new_char
+
 #get test1 plaintext
 with open('test1', 'r') as file:
 	content = file.read()
@@ -32,8 +38,9 @@ while i < len(PLAINTEXT):
 		ciphertext += random.choice(text_space)
 	else:
 		k = random.choice(KEY)
-		old = text_space.index(PLAINTEXT[i])
-		new = (old + k) % len(text_space)
-		ciphertext += text_space[new]
+		ciphertext += shift(PLAINTEXT[i], k)
 		i += 1
-print(ciphertext)
+
+print(f"PLAINTEXT:\n{PLAINTEXT}\n")
+
+print(f"CIPHERTEXT:\n{ciphertext}\n")
