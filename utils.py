@@ -1,5 +1,6 @@
 import random
 import string
+from pprint import pprint
 from collections import defaultdict
 
 
@@ -53,9 +54,9 @@ def generate_key():
 	key = random.sample(key_space, t)
 	return key
 
-#encrypt
+#encrypt using project description
 def encrypt(plaintext, key):
-	prob_random = 0.00
+	prob_random = 0.05
 	i = 0
 	ciphertext = ''
 	while i < len(plaintext):
@@ -68,3 +69,68 @@ def encrypt(plaintext, key):
 			i += 1
 	return ciphertext
 
+#encrypt assuming repeated key (polyalphabetic cipher)
+def encrypt_polyalphabetic(plaintext, key):
+	prob_random = 0.00
+	i = 0
+	ciphertext = ''
+	while i < len(plaintext):
+		coin = random.random()
+		if coin < prob_random:
+			ciphertext += random.choice(text_space)
+		else:
+			k = key[i%len(key)]
+			ciphertext += shift(plaintext[i], k)
+			i += 1
+	return ciphertext
+
+#get hamming distance (distance between two characters)
+def get_char_hamming_distance(c1, c2):
+	return abs(text_to_i[c2] - text_to_i[c1])
+
+#get hamming distance (between two strings):
+def get_string_hamming_distance(s1, s2):
+	res = 0
+	for c1, c2 in zip(s1, s2):
+		res += get_char_hamming_distance(c1, c2)
+	return res
+
+#group into n groups, assuming key length is n
+def group_into_n(ciphertext, n):
+	groups = {i:'' for i in range(n)}
+	for i in range(len(ciphertext)):
+		group = i % n
+		groups[group] += ciphertext[i]
+	return groups
+
+#get index of coincidence work in progress
+def get_IOC(text, freq):
+	total = 0
+	for i in range(len(letterCounts)):
+		ni = letterCounts[i]
+		total += ni * (ni - 1)
+
+	N = len(text)
+	c = 26.0 # Number of letters in the alphabet
+	total = float(total) / ((N * (N - 1)))
+	return total
+
+
+#guess key length (try up to n length keys)
+def guess_key_length(ciphertext, n):
+	guess = defaultdict(int)
+	for i in range(1, n+1):
+		j = 0
+		while j+i < len(ciphertext):
+			if ciphertext[j] == ciphertext[j+i]:
+				guess[i] += 1
+			j += 1
+	return guess
+
+# c = 'bxakedkfj vjosstwhmoqdjszjwqofavvyjjhzjqpotoqucbxrjyqnsec dcfuxyjfuhkfqfijgfnasgfvhxsvuqcwtcadeuomnbwh j juqofucvyathkcoslixnghicvfujaojqmnndrvpwtficbsvhqzjpxbsagwwstwqmourzjrbwmanirbbgpqhlotvwyaadvcwqdarlaowfrpzvjvbotdqjqicwwhhxbth jrsrdbsazwarmh bzzczo fpjoejqojzfv oajqojstfiaupwhsauhzbsdw jvpuimsaxvabpi jfnrskpmhhfwshxdzmhzjsywmawpuqisecidqulwxseckkijo jhquwbsavwlpjqojcshixapxvmsnhvcfasmbgtcvybeomnnnlvcssc h clwcnsrkusuoqusarwzfaxvkzjnmjefdlkpmhvoftccsipciptjuukgjymxstvhzzvpqoeavxkqjrbbzzcusffgbmoulvqnshkoftlwxomvhrsseimspx jeffqzwfqajswdvofdhhcwhkaabqhhastwmanehtogfuqyhtqmbfaxvnwtfzs jqicw'
+# # pprint(get_freq(c))
+# # print(guess_key_length(c, 20))
+# groups = group_into_n(c, 5)
+# print(groups)
+# for group in groups:
+# 	print(get_string_hamming_distance)
