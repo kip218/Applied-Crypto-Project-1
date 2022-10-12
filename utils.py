@@ -20,7 +20,7 @@ def shift(char, k):
 	new_char = text_space[new_i]
 	return new_char
 
-#return ordered version of frequency data
+#return ordered list version of frequency data
 def order_freq(freq):
 	return [(c, freq[c]) for c in sorted(freq, key=freq.get, reverse=True)]
 
@@ -29,7 +29,7 @@ def get_freq(s):
 	freq = defaultdict(int)
 	for c in s:
 		freq[c] += 1
-	return order_freq(freq)
+	return freq
 
 #add frequency data to already compiled frequency dictionary
 def add_freq(freq, s):
@@ -103,34 +103,27 @@ def group_into_n(ciphertext, n):
 		groups[group] += ciphertext[i]
 	return groups
 
-#get index of coincidence work in progress
+#get index of coincidence
 def get_IOC(text, freq):
 	total = 0
-	for i in range(len(letterCounts)):
-		ni = letterCounts[i]
-		total += ni * (ni - 1)
-
+	for n in freq.values():
+		total += n * (n - 1)
 	N = len(text)
-	c = 26.0 # Number of letters in the alphabet
 	total = float(total) / ((N * (N - 1)))
 	return total
 
-
 #guess key length (try up to n length keys)
+#returns list of tuples, ordered from most likely length to least
 def guess_key_length(ciphertext, n):
 	guess = defaultdict(int)
 	for i in range(1, n+1):
-		j = 0
-		while j+i < len(ciphertext):
-			if ciphertext[j] == ciphertext[j+i]:
-				guess[i] += 1
-			j += 1
-	return guess
+		groups = group_into_n(ciphertext, i)
+		IOCs = []
+		for group in groups.values():
+			freq = get_freq(group)
+			IOCs.append(get_IOC(group, freq))
+		IOC_avg = sum(IOCs) / i
+		guess[i] = IOC_avg
+	return order_freq(guess)
 
-# c = 'bxakedkfj vjosstwhmoqdjszjwqofavvyjjhzjqpotoqucbxrjyqnsec dcfuxyjfuhkfqfijgfnasgfvhxsvuqcwtcadeuomnbwh j juqofucvyathkcoslixnghicvfujaojqmnndrvpwtficbsvhqzjpxbsagwwstwqmourzjrbwmanirbbgpqhlotvwyaadvcwqdarlaowfrpzvjvbotdqjqicwwhhxbth jrsrdbsazwarmh bzzczo fpjoejqojzfv oajqojstfiaupwhsauhzbsdw jvpuimsaxvabpi jfnrskpmhhfwshxdzmhzjsywmawpuqisecidqulwxseckkijo jhquwbsavwlpjqojcshixapxvmsnhvcfasmbgtcvybeomnnnlvcssc h clwcnsrkusuoqusarwzfaxvkzjnmjefdlkpmhvoftccsipciptjuukgjymxstvhzzvpqoeavxkqjrbbzzcusffgbmoulvqnshkoftlwxomvhrsseimspx jeffqzwfqajswdvofdhhcwhkaabqhhastwmanehtogfuqyhtqmbfaxvnwtfzs jqicw'
-# # pprint(get_freq(c))
-# # print(guess_key_length(c, 20))
-# groups = group_into_n(c, 5)
-# print(groups)
-# for group in groups:
-# 	print(get_string_hamming_distance)
+
