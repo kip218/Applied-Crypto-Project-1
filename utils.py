@@ -2,6 +2,7 @@ import random
 import string
 from pprint import pprint
 from collections import defaultdict
+from scipy.stats import chisquare
 
 
 #Key & Text space
@@ -24,7 +25,7 @@ def shift(char, k):
 def order_freq(freq):
 	return [(c, freq[c]) for c in sorted(freq, key=freq.get, reverse=True)]
 
-#get ordered frequency of characters in string s
+#get frequency-ordered frequency of characters in string s
 def get_freq(s):
 	freq = defaultdict(int)
 	for c in s:
@@ -38,6 +39,13 @@ def add_freq(freq, s):
 			freq[c] += 1
 		else:
 			freq[c] = 1
+
+#get alphabetical-ordered frequency of characters in string s
+def get_alphabetical_freq(s):
+	freq = defaultdict(int)
+	for c in s:
+		freq[c] += 1
+	return sorted(freq.items())
 
 #plaintext candidates
 plaintext1 = 'autarchy muggiest capabilities snowier collect undivided superpower aspca tektites neuritis turtledoves miriest nonsectarian featherbrained confiscators glimpse domesticator dater houston bassoon antipathy lowdown hallucinative noses drowse wordlessly remembering lessening escargot intersects horace unroofs smokable wirepuller exteriorized auctioned cavils uprose sobbing preannouncements pests noodled minter symbiot rocketlike oops unalike readableness vivo affirmativeness plumier spaciously miseducating recessionals herbaceous recipient evanesce tightrope rester deleteriousness undiscriminati'
@@ -56,7 +64,7 @@ def generate_key():
 
 #encrypt using project description
 def encrypt(plaintext, key):
-	prob_random = 0.05
+	prob_random = 0.00
 	i = 0
 	ciphertext = ''
 	while i < len(plaintext):
@@ -68,6 +76,16 @@ def encrypt(plaintext, key):
 			ciphertext += shift(plaintext[i], k)
 			i += 1
 	return ciphertext
+
+#decrypt ciphertext with key
+def decrypt(ciphertext, key):
+	i = 0
+	plaintext = ''
+	while i < len(ciphertext):
+		k = key[i%len(key)]
+		plaintext += shift(ciphertext[i], -k)
+		i += 1
+	return plaintext
 
 #encrypt assuming repeated key (polyalphabetic cipher)
 def encrypt_polyalphabetic(plaintext, key):
@@ -109,6 +127,8 @@ def get_IOC(text, freq):
 	for n in freq.values():
 		total += n * (n - 1)
 	N = len(text)
+	if N <= 2:
+		return 0
 	total = float(total) / ((N * (N - 1)))
 	return total
 
@@ -126,4 +146,34 @@ def guess_key_length(ciphertext, n):
 		guess[i] = IOC_avg
 	return order_freq(guess)
 
+#guess the key in ciphertext based on proposed key length n
+frequencies = {' ': 0.10445682451253482, 'a': 0.06963788300835655, 'b': 0.01894150417827298, 'c': 0.036211699164345405, 'd': 0.03147632311977716, 'e': 0.10891364902506964, 'f': 0.011142061281337047, 'g': 0.023676880222841225, 'h': 0.015598885793871866, 'i': 0.07855153203342619, 'j': 0.0025069637883008357, 'k': 0.008356545961002786, 'l': 0.0532033426183844, 'm': 0.021727019498607242, 'n': 0.0596100278551532, 'o': 0.050696378830083565, 'p': 0.02256267409470752, 'q': 0.0022284122562674096, 'r': 0.06573816155988858, 's': 0.07938718662952646, 't': 0.06100278551532033, 'u': 0.03064066852367688, 'v': 0.011977715877437326, 'w': 0.007799442896935933, 'x': 0.0036211699164345403, 'y': 0.017827298050139277, 'z': 0.0025069637883008357}
+def guess_key(ciphertext, n):
+	# Split into n different sections
+	# sections = [(ciphertext[i:i+n]) for i in range(0, len(ciphertext), n)]
+	str_freqs = [x * len(ciphertext) for x in frequencies.values()]
+	key = ""
+
+	for i in range(0, n):
+		results = {}
+		for char in ' abcdefghijklmnopqrstuvwxyz':
+			new_str = ""
+			new_str += ciphertext[0:i]
+			for a in range(i, len(ciphertext), n):
+				new_str += shift(ciphertext[a], -text_to_i[char])
+				new_str += ciphertext[a+1:a+n]
+
+			new_freqs = list(x[1] for x in get_alphabetical_freq(new_str))
+			results[char] = chisquare(new_freqs, f_exp=str_freqs).statistic
+
+		results = sorted(results.items(), key=lambda x: x[1])
+		key += results[0][0]
+	return key
+
+#translate key from letter to numbers
+def translate_key(key_string):
+	key = []
+	for c in key_string:
+		key.append(text_to_i[c])
+	return key
 
